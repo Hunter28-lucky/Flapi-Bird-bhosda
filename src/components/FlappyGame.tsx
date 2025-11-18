@@ -31,6 +31,10 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     return saved ? parseInt(saved) : 0;
   });
   const [autopilot, setAutopilot] = useState(false);
+  const [autoStartAI, setAutoStartAI] = useState(() => {
+    const saved = localStorage.getItem("autoStartAI");
+    return saved === "true";
+  });
 
   const gameRef = useRef({
     bird: {
@@ -76,6 +80,9 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     gameRef.current.frameCount = 0;
     setScore(0);
     setGameState("playing");
+    if (autoStartAI) {
+      setAutopilot(true);
+    }
   };
 
   const jump = () => {
@@ -455,13 +462,29 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
                   </div>
                 </div>
               )}
-              <Button
-                onClick={startGame}
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xl px-10 py-7 rounded-xl shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)] hover:shadow-[0_15px_40px_-5px_rgba(34,197,94,0.6)] transition-all hover:scale-105 active:scale-95"
-              >
-                {gameState === "menu" ? "🚀 Start Game" : "🔄 Play Again"}
-              </Button>
+              <div className="flex flex-col gap-3">
+                {gameState === "menu" && (
+                  <label className="flex items-center justify-center gap-3 cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg transition-all">
+                    <input
+                      type="checkbox"
+                      checked={autoStartAI}
+                      onChange={(e) => {
+                        setAutoStartAI(e.target.checked);
+                        localStorage.setItem("autoStartAI", e.target.checked.toString());
+                      }}
+                      className="w-5 h-5 cursor-pointer accent-green-500"
+                    />
+                    <span className="text-white font-semibold text-sm">🤖 Auto-enable AI on start</span>
+                  </label>
+                )}
+                <Button
+                  onClick={startGame}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xl px-10 py-7 rounded-xl shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)] hover:shadow-[0_15px_40px_-5px_rgba(34,197,94,0.6)] transition-all hover:scale-105 active:scale-95"
+                >
+                  {gameState === "menu" ? "🚀 Start Game" : "🔄 Play Again"}
+                </Button>
+              </div>
               <p className="text-sm text-white/60 mt-4 font-medium">
                 {gameState === "menu" ? "Click or tap to make Amitabh fly!" : "Click or tap to flap"}
               </p>

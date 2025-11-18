@@ -42,6 +42,10 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
   });
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [autopilot, setAutopilot] = useState(false);
+  const [autoStartAI, setAutoStartAI] = useState(() => {
+    const saved = localStorage.getItem("autoStartAI");
+    return saved === "true";
+  });
 
   const gameRef = useRef({
     bird: {
@@ -118,11 +122,15 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     gameRef.current.pipes = [];
     gameRef.current.powerUps = [];
     gameRef.current.frameCount = 0;
+    gameRef.current.particles = [];
     gameRef.current.activeShield = false;
     gameRef.current.slowMotion = false;
     gameRef.current.doublePoints = false;
     setScore(0);
     setGameState("playing");
+    if (autoStartAI) {
+      setAutopilot(true);
+    }
   };
 
   const jump = () => {
@@ -589,6 +597,20 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
                 </div>
               )}
               <div className="flex flex-col gap-3">
+                {gameState === "menu" && (
+                  <label className="flex items-center justify-center gap-3 cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg transition-all">
+                    <input
+                      type="checkbox"
+                      checked={autoStartAI}
+                      onChange={(e) => {
+                        setAutoStartAI(e.target.checked);
+                        localStorage.setItem("autoStartAI", e.target.checked.toString());
+                      }}
+                      className="w-5 h-5 cursor-pointer accent-green-500"
+                    />
+                    <span className="text-white font-semibold text-sm">🤖 Auto-enable AI on start</span>
+                  </label>
+                )}
                 <Button
                   onClick={startGame}
                   size="lg"
