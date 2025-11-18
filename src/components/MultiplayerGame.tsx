@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/simple-ui/Button";
+import { Card } from "@/components/simple-ui/Card";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/toast";
 import { playJumpSound } from "@/utils/audioUtils";
 import amitabhFace from "@/assets/amitabh-face.png";
 
@@ -27,7 +27,6 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [myPlayerId, setMyPlayerId] = useState<string>("");
-  const { toast } = useToast();
   const collisionAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const gameRef = useRef({
@@ -39,12 +38,12 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
     image: null as HTMLImageElement | null,
   });
 
-  const GRAVITY = 0.35;
-  const JUMP_FORCE = -9;
+  const GRAVITY = 0.28; // Reduced for easier gameplay
+  const JUMP_FORCE = -8.5; // Better control
   const BIRD_SIZE = 50;
   const PIPE_WIDTH = 80;
-  const PIPE_GAP = 180;
-  const PIPE_SPEED = 3;
+  const PIPE_GAP = 200; // Increased gap
+  const PIPE_SPEED = 2.5; // Slower pipes
 
   useEffect(() => {
     collisionAudioRef.current = new Audio("/sounds/collision.mp3");
@@ -59,11 +58,7 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) {
-      toast({
-        title: "Multiplayer Unavailable",
-        description: "Supabase is not configured. Please set up environment variables.",
-        variant: "destructive"
-      });
+      toast.error("Multiplayer Unavailable - Supabase is not configured");
       return;
     }
 
@@ -187,8 +182,8 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
         game.myBird.y += game.myBird.velocity;
         game.myBird.rotation = Math.min(Math.max(game.myBird.velocity * 3, -30), 90);
 
-        // Generate pipes
-        if (game.frameCount % 90 === 0) {
+        // Generate pipes (increased interval for easier gameplay)
+        if (game.frameCount % 110 === 0) { // Changed from 90 to 110 frames
           const topHeight = Math.random() * (canvas.height - PIPE_GAP - 200) + 100;
           game.pipes.push({ x: canvas.width, topHeight, gap: PIPE_GAP, passed: false });
         }

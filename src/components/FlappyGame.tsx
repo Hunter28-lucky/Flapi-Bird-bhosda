@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/simple-ui/Button";
 import amitabhFace from "@/assets/amitabh-face.png";
 import { playJumpSound } from "@/utils/audioUtils";
 
@@ -50,12 +50,12 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     collisionAudioRef.current.volume = 0.7;
   }, []);
 
-  const GRAVITY = 0.35; // Reduced for smoother fall
-  const JUMP_FORCE = -9;
+  const GRAVITY = 0.28; // Reduced for smoother fall and easier gameplay
+  const JUMP_FORCE = -8.5; // Slightly less powerful for better control
   const BIRD_SIZE = 50;
   const PIPE_WIDTH = 80;
-  const PIPE_GAP = 180;
-  const PIPE_SPEED = 3;
+  const PIPE_GAP = 200; // Increased gap for easier passage
+  const PIPE_SPEED = 2.5; // Slower pipes for easier gameplay
 
   useEffect(() => {
     const img = new Image();
@@ -151,8 +151,8 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
         game.bird.y += game.bird.velocity;
         game.bird.rotation = Math.min(Math.max(game.bird.velocity * 3, -30), 90);
 
-        // Generate pipes
-        if (game.frameCount % 90 === 0) {
+        // Generate pipes (increased interval for easier gameplay)
+        if (game.frameCount % 110 === 0) { // Changed from 90 to 110 frames
           const topHeight = Math.random() * (canvas.height - PIPE_GAP - 200) + 100;
           game.pipes.push({
             x: canvas.width,

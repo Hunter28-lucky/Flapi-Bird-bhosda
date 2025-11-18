@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/simple-ui/Button";
+import { Input } from "@/components/simple-ui/Input";
+import { Card } from "@/components/simple-ui/Card";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/toast";
 import { z } from "zod";
 
 const playerNameSchema = z.string()
@@ -26,7 +26,6 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
   const [playerName, setPlayerName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const { toast } = useToast();
 
   const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -34,7 +33,7 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
 
   const createRoom = async () => {
     if (!isSupabaseConfigured() || !supabase) {
-      toast({ 
+      toast.error("
         title: "Multiplayer Unavailable", 
         description: "Supabase is not configured. Please set up environment variables.",
         variant: "destructive" 
@@ -46,7 +45,7 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
       playerNameSchema.parse(playerName);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast({ title: error.errors[0].message, variant: "destructive" });
+        toast.error("title: error.errors[0].message");
         return;
       }
     }
@@ -72,7 +71,7 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
       onJoinRoom(room.id, code, playerName.trim());
     } catch (error) {
       console.error("Error creating room:", error);
-      toast({ title: "Failed to create room", variant: "destructive" });
+      toast.error("Failed to create room");
     } finally {
       setIsCreating(false);
     }
@@ -84,7 +83,7 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
       roomCodeSchema.parse(roomCode);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast({ title: error.errors[0].message, variant: "destructive" });
+        toast.error("title: error.errors[0].message");
         return;
       }
     }
@@ -97,7 +96,7 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
         .single();
 
       if (roomError) {
-        toast({ title: "Room not found", variant: "destructive" });
+        toast.error("Room not found");
         return;
       }
 
@@ -109,14 +108,14 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
         });
 
       if (playerError) {
-        toast({ title: "Failed to join room", variant: "destructive" });
+        toast.error("Failed to join room");
         return;
       }
 
       onJoinRoom(room.id, roomCode.toUpperCase(), playerName.trim());
     } catch (error) {
       console.error("Error joining room:", error);
-      toast({ title: "Failed to join room", variant: "destructive" });
+      toast.error("Failed to join room");
     }
   };
 

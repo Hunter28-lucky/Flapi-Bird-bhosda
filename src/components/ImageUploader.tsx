@@ -1,8 +1,8 @@
 import { useRef, useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/simple-ui/Button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/simple-ui/Dialog";
 import { Upload, X, Crop } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import ReactCrop, { Crop as CropType, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 

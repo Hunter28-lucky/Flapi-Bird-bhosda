@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/simple-ui/Button";
+import { Card } from "@/components/simple-ui/Card";
 
 interface GameModeSelectorProps {
   onSelectMode: (mode: "single" | "multi") => void;

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/simple-ui/Card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/simple-ui/Dialog";
+import { Button } from "@/components/simple-ui/Button";
+import { Input } from "@/components/simple-ui/Input";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Trophy, Medal, Award, X } from "lucide-react";
 
 interface LeaderboardEntry {
