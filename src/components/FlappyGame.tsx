@@ -484,11 +484,12 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
               {autopilot ? '🤖 AI ON' : '🧠 AI OFF'}
             </Button>
             <div className="absolute top-6 left-0 right-0 text-center animate-fade-in">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-2 border-white/50">
-              <span className="text-2xl">🏆</span>
-              <p className="text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{score}</p>
+              <div className="inline-flex items-center gap-2 bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-2 border-white/50">
+                <span className="text-2xl">🏆</span>
+                <p className="text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{score}</p>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
