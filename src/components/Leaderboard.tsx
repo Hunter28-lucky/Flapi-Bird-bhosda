@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Trophy, Medal, Award, X } from "lucide-react";
 
@@ -26,6 +26,11 @@ export const Leaderboard = ({ currentScore, onClose }: LeaderboardProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) {
+      setLoading(false);
+      return;
+    }
+    
     fetchLeaderboard();
     
     // Subscribe to realtime updates
@@ -53,6 +58,11 @@ export const Leaderboard = ({ currentScore, onClose }: LeaderboardProps) => {
   }, [currentScore, entries]);
 
   const fetchLeaderboard = async () => {
+    if (!isSupabaseConfigured() || !supabase) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const { data, error } = await supabase
       .from('leaderboard')
@@ -77,6 +87,11 @@ export const Leaderboard = ({ currentScore, onClose }: LeaderboardProps) => {
   };
 
   const submitScore = async () => {
+    if (!isSupabaseConfigured() || !supabase) {
+      toast.error('Leaderboard unavailable - Supabase not configured');
+      return;
+    }
+
     if (!playerName.trim()) {
       toast.error('Please enter your name');
       return;

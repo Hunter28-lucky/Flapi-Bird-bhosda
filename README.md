@@ -4,6 +4,43 @@
 
 A fun Flappy Bird clone featuring Amitabh Bachchan with multiplayer support, power-ups, and global leaderboards.
 
+## Quick Start
+
+### 1. Install Dependencies
+
+```sh
+npm install
+```
+
+### 2. Configure Supabase (Optional - for Multiplayer & Leaderboard)
+
+The game works in **single-player mode** without any configuration. For multiplayer and leaderboard features:
+
+1. Copy `.env.local` to `.env`
+2. Get your Supabase credentials from [Supabase Dashboard](https://supabase.com/dashboard)
+3. Fill in your credentials in `.env`:
+   ```
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+   ```
+
+### 3. Start Development Server
+
+```sh
+npm run dev
+```
+
+Visit http://localhost:8080 to play!
+
+## Features
+
+- 🎮 **Single Player Mode** - Works offline, no setup needed
+- 👥 **Multiplayer Mode** - Real-time multiplayer (requires Supabase)
+- 🏆 **Global Leaderboard** - Compete worldwide (requires Supabase)
+- 🎁 **Power-ups** - Shield, Slow Motion, Double Points
+- 🖼️ **Custom Bird Images** - Upload your own character
+- 🎨 **Beautiful Graphics** - Smooth animations and particle effects
+
 ## How can I edit this code?
 
 **Use your preferred IDE**

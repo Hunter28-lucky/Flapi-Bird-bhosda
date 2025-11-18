@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { playJumpSound } from "@/utils/audioUtils";
 import amitabhFace from "@/assets/amitabh-face.png";
@@ -58,6 +58,15 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
   }, []);
 
   useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) {
+      toast({
+        title: "Multiplayer Unavailable",
+        description: "Supabase is not configured. Please set up environment variables.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const fetchPlayers = async () => {
       const { data } = await supabase
         .from("room_players")

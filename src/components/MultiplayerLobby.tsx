@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -33,6 +33,15 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
   };
 
   const createRoom = async () => {
+    if (!isSupabaseConfigured() || !supabase) {
+      toast({ 
+        title: "Multiplayer Unavailable", 
+        description: "Supabase is not configured. Please set up environment variables.",
+        variant: "destructive" 
+      });
+      return;
+    }
+
     try {
       playerNameSchema.parse(playerName);
     } catch (error) {
