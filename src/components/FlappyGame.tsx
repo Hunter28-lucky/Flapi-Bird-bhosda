@@ -30,11 +30,6 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     const saved = localStorage.getItem("flappyHighScore");
     return saved ? parseInt(saved) : 0;
   });
-  const [autopilot, setAutopilot] = useState(false);
-  const [autoStartAI, setAutoStartAI] = useState(() => {
-    const saved = localStorage.getItem("autoStartAI");
-    return saved === "true";
-  });
 
   const gameRef = useRef({
     bird: {
@@ -80,9 +75,6 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     gameRef.current.frameCount = 0;
     setScore(0);
     setGameState("playing");
-    if (autoStartAI) {
-      setAutopilot(true);
-    }
   };
 
   const jump = () => {
@@ -153,48 +145,6 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
 
       if (gameState === "playing") {
         game.frameCount++;
-
-        // Autopilot AI logic - Perfect trajectory calculation
-        if (autopilot) {
-          const birdX = 100;
-          const birdY = game.bird.y + BIRD_SIZE / 2;
-          const nextPipe = game.pipes.find(pipe => pipe.x + PIPE_WIDTH > birdX);
-          
-          if (nextPipe) {
-            const pipeCenter = nextPipe.topHeight + nextPipe.gap / 2;
-            const distanceToPipe = nextPipe.x - birdX;
-            
-            // Calculate if we need to jump to reach the center of the gap
-            const targetY = pipeCenter;
-            const timeToReach = distanceToPipe / PIPE_SPEED;
-            
-            // Predict where bird will be if we don't jump
-            let predictedY = game.bird.y;
-            let predictedVelocity = game.bird.velocity;
-            for (let i = 0; i < timeToReach && i < 60; i++) {
-              predictedVelocity += GRAVITY;
-              predictedY += predictedVelocity;
-            }
-            
-            // Jump if:
-            // 1. We're going to be too low (below center of gap)
-            // 2. We're falling too fast and getting close to the top of gap
-            // 3. Ground collision prevention
-            const gapTop = nextPipe.topHeight + 15;
-            const gapBottom = nextPipe.topHeight + nextPipe.gap - 15;
-            
-            if (predictedY + BIRD_SIZE / 2 > targetY + 10 || 
-                (game.bird.velocity > 2 && birdY > gapTop && distanceToPipe < 120) ||
-                game.bird.y > canvas.height - 100) {
-              game.bird.velocity = JUMP_FORCE;
-            }
-          } else {
-            // No pipe ahead - maintain middle position
-            if (game.bird.y > canvas.height / 2 + 50 || game.bird.velocity > 4) {
-              game.bird.velocity = JUMP_FORCE;
-            }
-          }
-        }
 
         // Update bird physics
         game.bird.velocity += GRAVITY;
@@ -486,20 +436,6 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
                 </div>
               )}
               <div className="flex flex-col gap-3">
-                {gameState === "menu" && (
-                  <label className="flex items-center justify-center gap-3 cursor-pointer bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg transition-all">
-                    <input
-                      type="checkbox"
-                      checked={autoStartAI}
-                      onChange={(e) => {
-                        setAutoStartAI(e.target.checked);
-                        localStorage.setItem("autoStartAI", e.target.checked.toString());
-                      }}
-                      className="w-5 h-5 cursor-pointer accent-green-500"
-                    />
-                    <span className="text-white font-semibold text-sm">🤖 Auto-enable AI on start</span>
-                  </label>
-                )}
                 <Button
                   onClick={startGame}
                   size="lg"
@@ -517,18 +453,6 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
 
         {gameState === "playing" && (
           <>
-            <Button
-              onClick={() => setAutopilot(!autopilot)}
-              variant={autopilot ? "default" : "outline"}
-              size="sm"
-              className={`absolute top-4 right-4 z-10 font-bold shadow-lg transition-all ${
-                autopilot 
-                  ? 'bg-green-500 hover:bg-green-600 text-white border-2 border-green-300 animate-pulse' 
-                  : 'bg-white/90 hover:bg-white border-2 border-gray-300'
-              }`}
-            >
-              {autopilot ? '🤖 AI ON' : '🧠 AI OFF'}
-            </Button>
             <div className="absolute top-6 left-0 right-0 text-center animate-fade-in">
               <div className="inline-flex items-center gap-2 bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-2 border-white/50">
                 <span className="text-2xl">🏆</span>
