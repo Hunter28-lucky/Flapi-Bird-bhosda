@@ -121,6 +121,10 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
 
     return () => {
       p2pRef.current?.disconnect();
+      // Clean up room if host leaves
+      if (isHost) {
+        localStorage.removeItem(`room_${roomCode}`);
+      }
     };
   }, [roomCode, playerName, isHost]);
 
@@ -264,6 +268,12 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
 
   const handleLeave = () => {
     p2pRef.current?.disconnect();
+    
+    // Clean up room from localStorage if host
+    if (isHost) {
+      localStorage.removeItem(`room_${roomCode}`);
+    }
+    
     onLeave();
   };
 

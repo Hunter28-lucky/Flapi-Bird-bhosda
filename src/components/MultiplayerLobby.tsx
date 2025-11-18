@@ -43,7 +43,16 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
     setIsCreating(true);
     try {
       const code = generateRoomCode();
-      toast.success(`Room created! Code: ${code}`);
+      
+      // Store room in localStorage so others can find it
+      const roomData = {
+        code,
+        host: playerName.trim(),
+        createdAt: Date.now(),
+      };
+      localStorage.setItem(`room_${code}`, JSON.stringify(roomData));
+      
+      toast.success(`Room created! Share code: ${code}`);
       onJoinRoom(code, playerName.trim(), true);
     } catch (error) {
       console.error("Error creating room:", error);
@@ -66,7 +75,7 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
     // Check if room exists in localStorage
     const roomData = localStorage.getItem(`room_${roomCode.toUpperCase()}`);
     if (!roomData) {
-      toast.error("Room not found");
+      toast.error(`Room "${roomCode.toUpperCase()}" not found. Please check the code or create a new room.`);
       return;
     }
 
