@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/simple-ui/Button";
 import { Input } from "@/components/simple-ui/Input";
 import { Card } from "@/components/simple-ui/Card";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import { z } from "zod";
 
@@ -17,7 +18,7 @@ const roomCodeSchema = z.string()
   .regex(/^[A-Z0-9]{6}$/, "Invalid room code format");
 
 interface MultiplayerLobbyProps {
-  onJoinRoom: (roomCode: string, playerName: string, isHost: boolean) => void;
+  onJoinRoom: (roomId: string, roomCode: string, playerName: string) => void;
   onBack: () => void;
 }
 
@@ -30,12 +31,21 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  const createRoom = () => {
+  const createRoom = async () => {
+    if (!isSupabaseConfigured() || !supabase) {
+      toast.error("
+        title: "Multiplayer Unavailable", 
+        description: "Supabase is not configured. Please set up environment variables.",
+        variant: "destructive" 
+      });
+      return;
+    }
+
     try {
       playerNameSchema.parse(playerName);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
+        toast.error("title: error.errors[0].message");
         return;
       }
     }
@@ -43,48 +53,78 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
     setIsCreating(true);
     try {
       const code = generateRoomCode();
-      toast.success(`Room created! Code: ${code}`);
-      onJoinRoom(code, playerName.trim(), true);
+      const { data: room, error: roomError } = await supabase
+        .from("game_rooms")
+        .insert({ room_code: code })
+        .select()
+        .single();
+
+      if (roomError) throw roomError;
+
+      await supabase
+        .from("room_players")
+        .insert({
+          room_id: room.id,
+          player_name: playerName.trim(),
+        });
+
+      onJoinRoom(room.id, code, playerName.trim());
     } catch (error) {
       console.error("Error creating room:", error);
       toast.error("Failed to create room");
+    } finally {
       setIsCreating(false);
     }
   };
 
-  const joinRoom = () => {
+  const joinRoom = async () => {
     try {
       playerNameSchema.parse(playerName);
       roomCodeSchema.parse(roomCode);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
+        toast.error("title: error.errors[0].message");
         return;
       }
     }
 
-    // Check if room exists in localStorage
-    const roomData = localStorage.getItem(`room_${roomCode.toUpperCase()}`);
-    if (!roomData) {
-      toast.error("Room not found");
-      return;
-    }
+    try {
+      const { data: room, error: roomError } = await supabase
+        .from("game_rooms")
+        .select()
+        .eq("room_code", roomCode.toUpperCase())
+        .single();
 
-    toast.success("Joining room...");
-    onJoinRoom(roomCode.toUpperCase(), playerName.trim(), false);
+      if (roomError) {
+        toast.error("Room not found");
+        return;
+      }
+
+      const { error: playerError } = await supabase
+        .from("room_players")
+        .insert({
+          room_id: room.id,
+          player_name: playerName.trim(),
+        });
+
+      if (playerError) {
+        toast.error("Failed to join room");
+        return;
+      }
+
+      onJoinRoom(room.id, roomCode.toUpperCase(), playerName.trim());
+    } catch (error) {
+      console.error("Error joining room:", error);
+      toast.error("Failed to join room");
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-game-sky-start via-game-sky-mid to-game-sky-end p-4">
       <Card className="p-8 space-y-6 w-full max-w-md bg-card/90 backdrop-blur-sm border-2 border-border">
-        <div>
-          <h2 className="text-4xl font-black text-center bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Peer-to-Peer Multiplayer
-          </h2>
-          <p className="text-center text-sm text-muted-foreground mt-2">
-            No server needed! Play directly with friends
-          </p>
-        </div>
+        <h2 className="text-4xl font-black text-center bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Multiplayer Mode
+        </h2>
         
         <div className="space-y-4">
           <Input
@@ -134,11 +174,6 @@ export const MultiplayerLobby = ({ onJoinRoom, onBack }: MultiplayerLobbyProps) 
           >
             ← Back
           </Button>
-        </div>
-
-        <div className="text-xs text-center text-muted-foreground space-y-1">
-          <p>💡 Tip: Both players must be online at the same time</p>
-          <p>🌐 Works on same network or using STUN servers</p>
         </div>
       </Card>
     </div>

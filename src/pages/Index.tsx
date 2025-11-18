@@ -10,9 +10,9 @@ const Index = () => {
   const [mode, setMode] = useState<"menu" | "single" | "multi" | "playing">("menu");
   const [customImage, setCustomImage] = useState<string | undefined>(undefined);
   const [multiplayerRoom, setMultiplayerRoom] = useState<{
-    roomId: string;
     roomCode: string;
     playerName: string;
+    isHost: boolean;
   } | null>(null);
 
   if (mode === "menu") {
@@ -43,8 +43,8 @@ const Index = () => {
   if (mode === "multi") {
     return (
       <MultiplayerLobby
-        onJoinRoom={(roomId, roomCode, playerName) => {
-          setMultiplayerRoom({ roomId, roomCode, playerName });
+        onJoinRoom={(roomCode, playerName, isHost) => {
+          setMultiplayerRoom({ roomCode, playerName, isHost });
           setMode("playing");
         }}
         onBack={() => setMode("menu")}
@@ -55,9 +55,9 @@ const Index = () => {
   if (mode === "playing" && multiplayerRoom) {
     return (
       <MultiplayerGame
-        roomId={multiplayerRoom.roomId}
         roomCode={multiplayerRoom.roomCode}
         playerName={multiplayerRoom.playerName}
+        isHost={multiplayerRoom.isHost}
         onLeave={() => {
           setMultiplayerRoom(null);
           setMode("menu");

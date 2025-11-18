@@ -1,33 +1,34 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/simple-ui/Button";
 import { Card } from "@/components/simple-ui/Card";
-import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
 import { playJumpSound } from "@/utils/audioUtils";
 import amitabhFace from "@/assets/amitabh-face.png";
+import P2PMultiplayer, { GameState } from "@/lib/p2pMultiplayer";
 
 interface MultiplayerGameProps {
-  roomId: string;
   roomCode: string;
   playerName: string;
+  isHost: boolean;
   onLeave: () => void;
 }
 
 interface Player {
   id: string;
-  player_name: string;
-  bird_y: number;
+  name: string;
+  birdY: number;
   velocity: number;
   score: number;
-  is_alive: boolean;
+  isAlive: boolean;
 }
 
-export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: MultiplayerGameProps) => {
+export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: MultiplayerGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameStarted, setGameStarted] = useState(false);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [myPlayerId, setMyPlayerId] = useState<string>("");
+  const [players, setPlayers] = useState<Map<string, Player>>(new Map());
+  const [connected, setConnected] = useState(false);
   const collisionAudioRef = useRef<HTMLAudioElement | null>(null);
+  const p2pRef = useRef<P2PMultiplayer | null>(null);
 
   const gameRef = useRef({
     myBird: { y: 250, velocity: 0, rotation: 0 },
@@ -38,12 +39,12 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
     image: null as HTMLImageElement | null,
   });
 
-  const GRAVITY = 0.28; // Reduced for easier gameplay
-  const JUMP_FORCE = -8.5; // Better control
+  const GRAVITY = 0.28;
+  const JUMP_FORCE = -8.5;
   const BIRD_SIZE = 50;
   const PIPE_WIDTH = 80;
-  const PIPE_GAP = 200; // Increased gap
-  const PIPE_SPEED = 2.5; // Slower pipes
+  const PIPE_GAP = 200;
+  const PIPE_SPEED = 2.5;
 
   useEffect(() => {
     collisionAudioRef.current = new Audio("/sounds/collision.mp3");
@@ -54,59 +55,84 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
     img.onload = () => {
       gameRef.current.image = img;
     };
-  }, []);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured() || !supabase) {
-      toast.error("Multiplayer Unavailable - Supabase is not configured");
-      return;
+    // Initialize P2P connection
+    p2pRef.current = new P2PMultiplayer(roomCode, playerName, {
+      onPlayerJoined: (playerId, playerName) => {
+        console.log(`Player joined: ${playerName}`);
+        toast.success(`${playerName} joined!`);
+        setPlayers(prev => {
+          const newPlayers = new Map(prev);
+          newPlayers.set(playerId, {
+            id: playerId,
+            name: playerName,
+            birdY: 250,
+            velocity: 0,
+            score: 0,
+            isAlive: true,
+          });
+          return newPlayers;
+        });
+      },
+      onPlayerLeft: (playerId) => {
+        console.log(`Player left: ${playerId}`);
+        const player = players.get(playerId);
+        if (player) {
+          toast.info(`${player.name} left`);
+        }
+        setPlayers(prev => {
+          const newPlayers = new Map(prev);
+          newPlayers.delete(playerId);
+          return newPlayers;
+        });
+      },
+      onGameStateUpdate: (playerId, state) => {
+        setPlayers(prev => {
+          const newPlayers = new Map(prev);
+          const player = newPlayers.get(playerId);
+          if (player) {
+            newPlayers.set(playerId, {
+              ...player,
+              birdY: state.birdY,
+              velocity: state.velocity,
+              score: state.score,
+              isAlive: state.isAlive,
+            });
+          }
+          return newPlayers;
+        });
+      },
+      onRoomReady: () => {
+        setConnected(true);
+        toast.success(isHost ? "Room created! Share code: " + roomCode : "Connected to room!");
+      },
+    }, isHost);
+
+    // Join or create room
+    if (isHost) {
+      p2pRef.current.createRoom();
+    } else {
+      p2pRef.current.joinRoom().catch((error) => {
+        console.error("Failed to join room:", error);
+        toast.error("Failed to join room");
+        onLeave();
+      });
     }
 
-    const fetchPlayers = async () => {
-      const { data } = await supabase
-        .from("room_players")
-        .select()
-        .eq("room_id", roomId);
-
-      if (data) {
-        setPlayers(data);
-        const me = data.find((p) => p.player_name === playerName);
-        if (me) setMyPlayerId(me.id);
-      }
-    };
-
-    fetchPlayers();
-
-    const channel = supabase
-      .channel(`room:${roomId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "room_players", filter: `room_id=eq.${roomId}` },
-        (payload) => {
-          console.log("Player update:", payload);
-          fetchPlayers();
-        }
-      )
-      .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
+      p2pRef.current?.disconnect();
     };
-  }, [roomId, playerName]);
+  }, [roomCode, playerName, isHost]);
 
-  const updateMyState = async () => {
-    if (!myPlayerId || !gameStarted) return;
+  const updateMyState = () => {
+    if (!gameStarted || !p2pRef.current) return;
 
-    await supabase
-      .from("room_players")
-      .update({
-        bird_y: gameRef.current.myBird.y,
-        velocity: gameRef.current.myBird.velocity,
-        score: gameRef.current.score,
-        is_alive: gameRef.current.isAlive,
-        last_update: new Date().toISOString(),
-      })
-      .eq("id", myPlayerId);
+    p2pRef.current.sendGameState({
+      birdY: gameRef.current.myBird.y,
+      velocity: gameRef.current.myBird.velocity,
+      score: gameRef.current.score,
+      isAlive: gameRef.current.isAlive,
+    });
   };
 
   const jump = () => {
@@ -116,74 +142,35 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
     }
   };
 
-  // Spacebar control
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.code === 'Space' || e.key === ' ') {
-        e.preventDefault(); // Prevent page scroll
-        jump();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [gameStarted]);
-
-  const startGame = async () => {
-    gameRef.current.myBird = { y: 250, velocity: 0, rotation: 0 };
-    gameRef.current.pipes = [];
-    gameRef.current.frameCount = 0;
-    gameRef.current.score = 0;
-    gameRef.current.isAlive = true;
-    setGameStarted(true);
-
-    await supabase
-      .from("game_rooms")
-      .update({ status: "playing", started_at: new Date().toISOString() })
-      .eq("id", roomId);
-  };
-
-  useEffect(() => {
-    if (!gameStarted) return;
-
-    const interval = setInterval(updateMyState, 100);
-    return () => clearInterval(interval);
-  }, [gameStarted, myPlayerId]);
-
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !gameStarted) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animationFrameId: number;
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = 800;
+    canvas.height = 600;
 
     const gameLoop = () => {
       const game = gameRef.current;
 
+      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Background
+      // Draw sky
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, "hsl(200, 100%, 85%)");
-      gradient.addColorStop(0.5, "hsl(195, 100%, 88%)");
-      gradient.addColorStop(1, "hsl(190, 85%, 92%)");
+      gradient.addColorStop(0, "#87CEEB");
+      gradient.addColorStop(1, "#E0F6FF");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      if (gameStarted && game.isAlive) {
-        game.frameCount++;
-
+      if (game.isAlive) {
         // Update physics
         game.myBird.velocity += GRAVITY;
         game.myBird.y += game.myBird.velocity;
         game.myBird.rotation = Math.min(Math.max(game.myBird.velocity * 3, -30), 90);
 
         // Generate pipes (increased interval for easier gameplay)
-        if (game.frameCount % 110 === 0) { // Changed from 90 to 110 frames
+        if (game.frameCount % 110 === 0) {
           const topHeight = Math.random() * (canvas.height - PIPE_GAP - 200) + 100;
           game.pipes.push({ x: canvas.width, topHeight, gap: PIPE_GAP, passed: false });
         }
@@ -193,146 +180,136 @@ export const MultiplayerGame = ({ roomId, roomCode, playerName, onLeave }: Multi
           pipe.x -= PIPE_SPEED;
 
           // Draw pipes
-          const pipeGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + PIPE_WIDTH, 0);
-          pipeGradient.addColorStop(0, "hsl(142, 76%, 40%)");
-          pipeGradient.addColorStop(0.5, "hsl(142, 80%, 50%)");
-          pipeGradient.addColorStop(1, "hsl(142, 76%, 40%)");
-          ctx.fillStyle = pipeGradient;
+          ctx.fillStyle = "#2D5016";
           ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.topHeight);
+          ctx.fillRect(pipe.x, pipe.topHeight + pipe.gap, PIPE_WIDTH, canvas.height);
 
-          ctx.fillStyle = "hsl(142, 76%, 28%)";
-          ctx.fillRect(pipe.x - 5, pipe.topHeight - 30, PIPE_WIDTH + 10, 30);
-
-          const bottomY = pipe.topHeight + pipe.gap;
-          ctx.fillStyle = pipeGradient;
-          ctx.fillRect(pipe.x, bottomY, PIPE_WIDTH, canvas.height - bottomY);
-          ctx.fillStyle = "hsl(142, 76%, 28%)";
-          ctx.fillRect(pipe.x - 5, bottomY, PIPE_WIDTH + 10, 30);
-
-          // Score
-          if (!pipe.passed && pipe.x + PIPE_WIDTH < canvas.width / 2 - BIRD_SIZE / 2) {
+          // Check scoring
+          if (!pipe.passed && pipe.x + PIPE_WIDTH < 100) {
             pipe.passed = true;
             game.score++;
           }
 
-          // Collision detection
-          const birdLeft = canvas.width / 2 - BIRD_SIZE / 2;
-          const birdRight = canvas.width / 2 + BIRD_SIZE / 2;
-          const birdTop = game.myBird.y;
-          const birdBottom = game.myBird.y + BIRD_SIZE;
-
+          // Check collision
           if (
-            pipe.x < birdRight &&
-            pipe.x + PIPE_WIDTH > birdLeft &&
-            (birdTop < pipe.topHeight || birdBottom > bottomY)
+            100 + BIRD_SIZE > pipe.x &&
+            100 < pipe.x + PIPE_WIDTH &&
+            (game.myBird.y < pipe.topHeight || game.myBird.y + BIRD_SIZE > pipe.topHeight + pipe.gap)
           ) {
-            collisionAudioRef.current?.play().catch(console.log);
             game.isAlive = false;
+            collisionAudioRef.current?.play();
           }
 
+          // Remove off-screen pipes
           if (pipe.x + PIPE_WIDTH < 0) {
             game.pipes.splice(index, 1);
           }
         });
 
-        // Ground/ceiling collision
-        if (game.myBird.y + BIRD_SIZE > canvas.height || game.myBird.y < 0) {
-          collisionAudioRef.current?.play().catch(console.log);
+        // Check ground/ceiling collision
+        if (game.myBird.y < 0 || game.myBird.y + BIRD_SIZE > canvas.height - 50) {
           game.isAlive = false;
+          collisionAudioRef.current?.play();
         }
       }
 
       // Draw my bird
-      ctx.save();
-      ctx.translate(canvas.width / 2, game.myBird.y + BIRD_SIZE / 2);
-      ctx.rotate((game.myBird.rotation * Math.PI) / 180);
-      ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
-      ctx.shadowBlur = 15;
-      ctx.shadowOffsetX = 5;
-      ctx.shadowOffsetY = 5;
-
       if (game.image) {
+        ctx.save();
+        ctx.translate(100 + BIRD_SIZE / 2, game.myBird.y + BIRD_SIZE / 2);
+        ctx.rotate((game.myBird.rotation * Math.PI) / 180);
         ctx.drawImage(game.image, -BIRD_SIZE / 2, -BIRD_SIZE / 2, BIRD_SIZE, BIRD_SIZE);
+        ctx.restore();
       }
-      ctx.restore();
 
       // Draw other players
-      players
-        .filter((p) => p.player_name !== playerName && p.is_alive)
-        .forEach((p) => {
+      players.forEach((player) => {
+        if (player.isAlive && game.image) {
           ctx.save();
           ctx.globalAlpha = 0.6;
-          ctx.translate(canvas.width / 2 + 80, p.bird_y + BIRD_SIZE / 2);
-          if (game.image) {
-            ctx.drawImage(game.image, -BIRD_SIZE / 2, -BIRD_SIZE / 2, BIRD_SIZE, BIRD_SIZE);
-          }
-          ctx.restore();
-
-          // Draw player name
+          ctx.drawImage(game.image, 150, player.birdY, BIRD_SIZE, BIRD_SIZE);
+          ctx.globalAlpha = 1;
           ctx.fillStyle = "white";
-          ctx.font = "bold 12px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(p.player_name, canvas.width / 2 + 80, p.bird_y - 10);
-        });
+          ctx.font = "14px Arial";
+          ctx.fillText(player.name, 150, player.birdY - 10);
+          ctx.restore();
+        }
+      });
 
-      animationFrameId = requestAnimationFrame(gameLoop);
+      // Draw ground
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+
+      // Draw scores
+      ctx.fillStyle = "white";
+      ctx.font = "24px Arial";
+      ctx.fillText(`You: ${game.score}`, 10, 30);
+      
+      let yOffset = 60;
+      players.forEach((player) => {
+        ctx.fillText(`${player.name}: ${player.score}`, 10, yOffset);
+        yOffset += 30;
+      });
+
+      game.frameCount++;
+      updateMyState();
+
+      if (game.isAlive) {
+        requestAnimationFrame(gameLoop);
+      }
     };
 
-    gameLoop();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [gameStarted, players, playerName]);
+    requestAnimationFrame(gameLoop);
+  }, [gameStarted, players]);
+
+  const handleLeave = () => {
+    p2pRef.current?.disconnect();
+    onLeave();
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-game-sky-start via-game-sky-mid to-game-sky-end p-4">
-      <Card className="mb-4 p-4 bg-card/90 backdrop-blur-sm">
-        <div className="flex items-center gap-4">
+      <Card className="p-6 space-y-4">
+        <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm text-muted-foreground">Room Code</p>
-            <p className="text-2xl font-black text-primary">{roomCode}</p>
+            <h2 className="text-2xl font-bold">Room: {roomCode}</h2>
+            <p className="text-sm text-muted-foreground">
+              {connected ? `${players.size + 1} player(s)` : "Connecting..."}
+            </p>
           </div>
-          <div className="border-l pl-4">
-            <p className="text-sm text-muted-foreground">Players</p>
-            <p className="text-xl font-bold">{players.length} online</p>
-          </div>
+          <Button onClick={handleLeave} variant="outline">
+            Leave
+          </Button>
         </div>
+
+        {!gameStarted ? (
+          <div className="text-center space-y-4">
+            <p>Waiting for players...</p>
+            {isHost && (
+              <div className="p-4 bg-blue-100 rounded-lg">
+                <p className="font-bold">Share this code:</p>
+                <p className="text-3xl font-mono">{roomCode}</p>
+              </div>
+            )}
+            <Button
+              onClick={() => setGameStarted(true)}
+              disabled={!connected}
+              className="w-full"
+            >
+              Start Game
+            </Button>
+          </div>
+        ) : (
+          <>
+            <canvas
+              ref={canvasRef}
+              onClick={jump}
+              className="border-2 border-border rounded-lg cursor-pointer"
+            />
+            <p className="text-center text-sm">Click or tap to flap!</p>
+          </>
+        )}
       </Card>
-
-      <div className="relative">
-        <canvas
-          ref={canvasRef}
-          width={400}
-          height={600}
-          className="border-4 border-primary/30 rounded-2xl shadow-game-card cursor-pointer"
-          onClick={gameStarted ? jump : undefined}
-        />
-
-        {!gameStarted && (
-          <div className="absolute inset-0 flex items-center justify-center backdrop-blur-md bg-black/70 rounded-2xl">
-            <div className="text-center space-y-6 p-8">
-              <h2 className="text-4xl font-black text-white">Ready to Play?</h2>
-              <p className="text-white/80">Share the room code with your friend!</p>
-              <Button onClick={startGame} size="lg" className="bg-primary hover:bg-primary/90 font-bold text-xl px-10 py-7">
-                🚀 Start Game
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {gameStarted && (
-          <div className="absolute top-6 left-0 right-0 text-center">
-            <div className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-game-score">
-              <span className="text-2xl">🏆</span>
-              <p className="text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {gameRef.current.score}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <Button onClick={onLeave} variant="outline" className="mt-4">
-        ← Leave Game
-      </Button>
     </div>
   );
 };
