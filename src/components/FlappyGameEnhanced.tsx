@@ -146,7 +146,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     }
   };
 
-  // Spacebar control
+  // Spacebar and touch controls
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.key === ' ') {
@@ -159,9 +159,21 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
       }
     };
 
+    const handleTouch = (e: TouchEvent) => {
+      e.preventDefault(); // Prevent default touch behavior
+      if (gameState === "playing") {
+        jump();
+      } else if (gameState === "menu" || gameState === "gameOver") {
+        startGame();
+      }
+    };
+
     window.addEventListener('keydown', handleKeyPress);
+    document.addEventListener('touchstart', handleTouch, { passive: false });
+    
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
+      document.removeEventListener('touchstart', handleTouch);
     };
   }, [gameState]);
 
@@ -504,31 +516,98 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
         ctx.restore();
       }
 
-      // Enhanced ground
+      // 🔥 FIRE AND LAVA GROUND 🔥
       const groundHeight = 80;
-      const groundGradient = ctx.createLinearGradient(0, canvas.height - groundHeight, 0, canvas.height);
-      groundGradient.addColorStop(0, "hsl(30, 60%, 48%)");
-      groundGradient.addColorStop(0.3, "hsl(30, 60%, 42%)");
-      groundGradient.addColorStop(0.7, "hsl(30, 60%, 38%)");
-      groundGradient.addColorStop(1, "hsl(30, 60%, 28%)");
-      ctx.fillStyle = groundGradient;
+      
+      // Molten lava base with flickering glow
+      const lavaGradient = ctx.createLinearGradient(0, canvas.height - groundHeight, 0, canvas.height);
+      const lavaFlicker = Math.sin(game.frameCount * 0.1) * 0.1 + 0.9;
+      lavaGradient.addColorStop(0, `hsl(16, 100%, ${35 * lavaFlicker}%)`);
+      lavaGradient.addColorStop(0.3, `hsl(25, 100%, ${45 * lavaFlicker}%)`);
+      lavaGradient.addColorStop(0.6, `hsl(14, 100%, ${30 * lavaFlicker}%)`);
+      lavaGradient.addColorStop(1, `hsl(0, 80%, ${20 * lavaFlicker}%)`);
+      ctx.fillStyle = lavaGradient;
       ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
 
-      // Animated ground texture
-      ctx.save();
-      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-      const patternOffset = (game.frameCount * 2) % 40;
-      for (let i = -40; i < canvas.width + 40; i += 40) {
-        ctx.fillRect(i + patternOffset, canvas.height - groundHeight + 10, 35, 4);
-        ctx.fillRect(i + patternOffset + 10, canvas.height - groundHeight + 25, 35, 4);
-        ctx.fillRect(i + patternOffset, canvas.height - groundHeight + 40, 35, 4);
-        ctx.fillRect(i + patternOffset + 10, canvas.height - groundHeight + 55, 35, 4);
+      // Lava bubbles and hot spots
+      for (let i = 0; i < 8; i++) {
+        const bubbleX = (game.frameCount * 0.5 + i * 50) % canvas.width;
+        const bubbleSize = 10 + Math.sin(game.frameCount * 0.15 + i) * 5;
+        const bubbleY = canvas.height - groundHeight + 20 + Math.sin(game.frameCount * 0.1 + i * 2) * 10;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        const bubbleGradient = ctx.createRadialGradient(bubbleX, bubbleY, 0, bubbleX, bubbleY, bubbleSize);
+        bubbleGradient.addColorStop(0, '#ff6b00');
+        bubbleGradient.addColorStop(0.5, '#ff4400');
+        bubbleGradient.addColorStop(1, 'rgba(139, 0, 0, 0)');
+        ctx.fillStyle = bubbleGradient;
+        ctx.beginPath();
+        ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
-      ctx.restore();
 
-      // Ground highlight
-      ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-      ctx.fillRect(0, canvas.height - groundHeight, canvas.width, 2);
+      // Animated flames dancing on top
+      for (let i = 0; i < 15; i++) {
+        const flameX = (i * 30 + game.frameCount * 0.3) % canvas.width;
+        const flameHeight = 25 + Math.sin(game.frameCount * 0.2 + i) * 15;
+        const flameWidth = 8 + Math.sin(game.frameCount * 0.15 + i * 0.5) * 4;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.8;
+        const flameGradient = ctx.createLinearGradient(
+          flameX, 
+          canvas.height - groundHeight - flameHeight, 
+          flameX, 
+          canvas.height - groundHeight
+        );
+        flameGradient.addColorStop(0, '#fff44f');
+        flameGradient.addColorStop(0.3, '#ff9500');
+        flameGradient.addColorStop(0.6, '#ff4400');
+        flameGradient.addColorStop(1, '#b30000');
+        ctx.fillStyle = flameGradient;
+        
+        ctx.beginPath();
+        ctx.moveTo(flameX, canvas.height - groundHeight);
+        ctx.quadraticCurveTo(
+          flameX - flameWidth / 2,
+          canvas.height - groundHeight - flameHeight / 2,
+          flameX,
+          canvas.height - groundHeight - flameHeight
+        );
+        ctx.quadraticCurveTo(
+          flameX + flameWidth / 2,
+          canvas.height - groundHeight - flameHeight / 2,
+          flameX,
+          canvas.height - groundHeight
+        );
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Glowing embers floating upward
+      if (game.frameCount % 3 === 0) {
+        for (let i = 0; i < 2; i++) {
+          game.particles.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height - groundHeight,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: -1 - Math.random() * 2,
+            life: 1,
+            color: Math.random() > 0.5 ? '#ff6b00' : '#ffaa00',
+          });
+        }
+      }
+
+      // Lava glow reflection on top edge
+      ctx.save();
+      ctx.globalAlpha = 0.4 + Math.sin(game.frameCount * 0.1) * 0.2;
+      ctx.fillStyle = '#ff4400';
+      ctx.shadowColor = '#ff4400';
+      ctx.shadowBlur = 20;
+      ctx.fillRect(0, canvas.height - groundHeight - 2, canvas.width, 4);
+      ctx.restore();
 
       animationFrameId = requestAnimationFrame(gameLoop);
     };
@@ -541,39 +620,40 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
   }, [gameState, highScore]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-game-sky-start via-game-sky-mid to-game-sky-end p-4">
-      <div className="relative">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-game-sky-start via-game-sky-mid to-game-sky-end p-2 sm:p-4">
+      <div className="relative w-full max-w-[400px]">
         <canvas
           ref={canvasRef}
           width={400}
           height={600}
-          className="border-4 border-primary/30 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] cursor-pointer transition-transform hover:scale-[1.01]"
+          className="w-full h-auto border-4 border-primary/30 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] cursor-pointer touch-none select-none"
           onClick={gameState === "playing" ? jump : undefined}
+          style={{ maxHeight: 'calc(100vh - 180px)' }}
         />
         
         {gameState !== "playing" && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 rounded-2xl animate-fade-in">
-            <div className="text-center space-y-6 p-8 max-w-sm">
-              <h1 className="text-6xl font-black text-white mb-4 drop-shadow-[0_4px_20px_rgba(255,255,255,0.3)] animate-scale-in">
+            <div className="text-center space-y-4 sm:space-y-6 p-4 sm:p-8 max-w-sm w-full">
+              <h1 className="text-4xl sm:text-6xl font-black text-white mb-2 sm:mb-4 drop-shadow-[0_4px_20px_rgba(255,255,255,0.3)] animate-scale-in">
                 {gameState === "menu" ? "Flappy Amitabh" : "Game Over!"}
               </h1>
               {gameState === "gameOver" && (
-                <div className="space-y-3 animate-fade-in">
-                  <div className="bg-secondary/30 border-2 border-secondary rounded-xl p-4">
-                    <p className="text-sm text-white/80 uppercase tracking-wider mb-1">Your Score</p>
-                    <p className="text-5xl font-black text-secondary drop-shadow-lg">{score}</p>
+                <div className="space-y-2 sm:space-y-3 animate-fade-in">
+                  <div className="bg-secondary/30 border-2 border-secondary rounded-xl p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-white/80 uppercase tracking-wider mb-1">Your Score</p>
+                    <p className="text-4xl sm:text-5xl font-black text-secondary drop-shadow-lg">{score}</p>
                   </div>
-                  <div className="bg-primary/30 border border-primary/50 rounded-lg p-3">
+                  <div className="bg-primary/30 border border-primary/50 rounded-lg p-2 sm:p-3">
                     <p className="text-xs text-white/70 uppercase tracking-wider mb-1">Best Score</p>
-                    <p className="text-2xl font-bold text-white">{highScore}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-white">{highScore}</p>
                   </div>
                 </div>
               )}
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 sm:gap-3">
                 <Button
                   onClick={startGame}
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xl px-10 py-7 rounded-xl shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)] hover:shadow-[0_15px_40px_-5px_rgba(34,197,94,0.6)] transition-all hover:scale-105 active:scale-95"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg sm:text-xl px-8 sm:px-10 py-6 sm:py-7 rounded-xl shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)] hover:shadow-[0_15px_40px_-5px_rgba(34,197,94,0.6)] transition-all active:scale-95 touch-none"
                 >
                   {gameState === "menu" ? "🚀 Start Game" : "🔄 Play Again"}
                 </Button>
@@ -582,14 +662,14 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
                     onClick={() => setShowLeaderboard(true)}
                     variant="outline"
                     size="lg"
-                    className="font-bold text-lg px-10 py-6 rounded-xl hover:scale-105 transition-all"
+                    className="font-bold text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 rounded-xl transition-all touch-none"
                   >
                     🏆 View Leaderboard
                   </Button>
                 )}
               </div>
-              <p className="text-sm text-white/60 mt-4 font-medium">
-                {gameState === "menu" ? "Click, tap, or press SPACE to fly!" : "Click, tap, or press SPACE to flap"}
+              <p className="text-xs sm:text-sm text-white/60 mt-2 sm:mt-4 font-medium px-2">
+                {gameState === "menu" ? "Tap anywhere to fly!" : "Tap to flap"}
               </p>
             </div>
           </div>
@@ -597,31 +677,31 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
 
         {gameState === "playing" && (
           <>
-            <div className="absolute top-6 left-0 right-0 text-center animate-fade-in">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-br from-white/95 to-white/90 px-8 py-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-2 border-white/50">
-                <span className="text-2xl">🏆</span>
-                <p className="text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{score}</p>
+            <div className="absolute top-4 sm:top-6 left-0 right-0 text-center animate-fade-in pointer-events-none">
+              <div className="inline-flex items-center gap-1 sm:gap-2 bg-gradient-to-br from-white/95 to-white/90 px-4 sm:px-8 py-2 sm:py-4 rounded-xl sm:rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-2 border-white/50">
+                <span className="text-lg sm:text-2xl">🏆</span>
+                <p className="text-3xl sm:text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{score}</p>
               </div>
             </div>
 
             {/* Active power-ups display */}
-            <div className="absolute top-24 left-4 right-4 flex justify-center gap-3 animate-fade-in">
+            <div className="absolute top-16 sm:top-24 left-2 right-2 sm:left-4 sm:right-4 flex justify-center gap-2 sm:gap-3 animate-fade-in pointer-events-none flex-wrap">
               {gameRef.current.activeShield && (
-                <div className="bg-blue-500 px-4 py-2 rounded-xl border-2 border-blue-300 shadow-lg flex items-center gap-2 animate-pulse">
-                  <Shield className="h-5 w-5 text-white" />
-                  <span className="text-white font-bold text-sm">Shield Active</span>
+                <div className="bg-blue-500 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border-2 border-blue-300 shadow-lg flex items-center gap-1 sm:gap-2 animate-pulse">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <span className="text-white font-bold text-xs sm:text-sm">Shield</span>
                 </div>
               )}
               {gameRef.current.slowMotion && (
-                <div className="bg-purple-500 px-4 py-2 rounded-xl border-2 border-purple-300 shadow-lg flex items-center gap-2 animate-pulse">
-                  <Clock className="h-5 w-5 text-white" />
-                  <span className="text-white font-bold text-sm">Slow Motion</span>
+                <div className="bg-purple-500 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border-2 border-purple-300 shadow-lg flex items-center gap-1 sm:gap-2 animate-pulse">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <span className="text-white font-bold text-xs sm:text-sm">Slow-Mo</span>
                 </div>
               )}
               {gameRef.current.doublePoints && (
-                <div className="bg-yellow-500 px-4 py-2 rounded-xl border-2 border-yellow-300 shadow-lg flex items-center gap-2 animate-pulse">
-                  <Star className="h-5 w-5 text-white" />
-                  <span className="text-white font-bold text-sm">2x Points</span>
+                <div className="bg-yellow-500 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border-2 border-yellow-300 shadow-lg flex items-center gap-1 sm:gap-2 animate-pulse">
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <span className="text-white font-bold text-xs sm:text-sm">2x Points</span>
                 </div>
               )}
             </div>
@@ -629,27 +709,27 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
         )}
       </div>
 
-      <div className="mt-8 text-center space-y-3 bg-card rounded-2xl p-6 shadow-lg border border-border/50">
+      <div className="mt-4 sm:mt-8 text-center space-y-2 sm:space-y-3 bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-border/50 w-full max-w-[400px]">
         <div className="flex items-center justify-center gap-2">
-          <span className="text-xl">👑</span>
-          <p className="text-lg font-bold text-foreground">Best: <span className="text-primary">{highScore}</span></p>
+          <span className="text-lg sm:text-xl">👑</span>
+          <p className="text-base sm:text-lg font-bold text-foreground">Best: <span className="text-primary">{highScore}</span></p>
         </div>
-        <div className="flex items-center justify-center gap-4 text-sm">
+        <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm flex-wrap">
           <div className="flex items-center gap-1">
-            <Shield className="h-4 w-4 text-blue-500" />
+            <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
             <span className="text-muted-foreground">Shield</span>
           </div>
           <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4 text-purple-500" />
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
             <span className="text-muted-foreground">Slow-Mo</span>
           </div>
           <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 text-yellow-500" />
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
             <span className="text-muted-foreground">2x Score</span>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground font-medium">
-          💻 Desktop: Click / Spacebar | 📱 Mobile: Tap
+        <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+          📱 Tap anywhere to play!
         </p>
       </div>
 
