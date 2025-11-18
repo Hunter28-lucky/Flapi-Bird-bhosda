@@ -231,20 +231,43 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
         const effectiveGravity = game.slowMotion ? GRAVITY * 0.6 : GRAVITY;
         const effectivePipeSpeed = game.slowMotion ? PIPE_SPEED * 0.5 : PIPE_SPEED;
 
-        // Autopilot AI logic
+        // Autopilot AI logic - Perfect trajectory calculation
         if (autopilot) {
-          const nextPipe = game.pipes.find(pipe => pipe.x + PIPE_WIDTH > canvas.width / 2 - BIRD_SIZE / 2);
+          const birdX = canvas.width / 2;
+          const birdY = game.bird.y + BIRD_SIZE / 2;
+          const nextPipe = game.pipes.find(pipe => pipe.x + PIPE_WIDTH > birdX);
+          
           if (nextPipe) {
             const pipeCenter = nextPipe.topHeight + nextPipe.gap / 2;
-            const birdCenter = game.bird.y + BIRD_SIZE / 2;
-            const distanceToPipe = nextPipe.x - (canvas.width / 2 + BIRD_SIZE / 2);
+            const distanceToPipe = nextPipe.x - birdX;
             
-            // Jump if bird is below center and pipe is approaching
-            if (birdCenter > pipeCenter - 20 && distanceToPipe < 200) {
+            // Calculate if we need to jump to reach the center of the gap
+            const targetY = pipeCenter;
+            const timeToReach = distanceToPipe / effectivePipeSpeed;
+            
+            // Predict where bird will be if we don't jump
+            let predictedY = game.bird.y;
+            let predictedVelocity = game.bird.velocity;
+            for (let i = 0; i < timeToReach && i < 60; i++) {
+              predictedVelocity += effectiveGravity;
+              predictedY += predictedVelocity;
+            }
+            
+            // Jump if:
+            // 1. We're going to be too low (below center of gap)
+            // 2. We're falling too fast and getting close to the top of gap
+            // 3. Ground collision prevention
+            const gapTop = nextPipe.topHeight + 15;
+            const gapBottom = nextPipe.topHeight + nextPipe.gap - 15;
+            
+            if (predictedY + BIRD_SIZE / 2 > targetY + 10 || 
+                (game.bird.velocity > 2 && birdY > gapTop && distanceToPipe < 120) ||
+                game.bird.y > canvas.height - 100) {
               game.bird.velocity = JUMP_FORCE;
             }
-            // Also jump if falling too fast and close to top of gap
-            if (game.bird.velocity > 3 && birdCenter > nextPipe.topHeight + 30 && distanceToPipe < 150) {
+          } else {
+            // No pipe ahead - maintain middle position
+            if (game.bird.y > canvas.height / 2 + 50 || game.bird.velocity > 4) {
               game.bird.velocity = JUMP_FORCE;
             }
           }
