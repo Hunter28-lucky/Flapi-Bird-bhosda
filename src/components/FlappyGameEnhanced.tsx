@@ -41,6 +41,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     return saved ? parseInt(saved) : 0;
   });
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [autopilot, setAutopilot] = useState(false);
 
   const gameRef = useRef({
     bird: {
@@ -221,6 +222,25 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
 
         const effectiveGravity = game.slowMotion ? GRAVITY * 0.6 : GRAVITY;
         const effectivePipeSpeed = game.slowMotion ? PIPE_SPEED * 0.5 : PIPE_SPEED;
+
+        // Autopilot AI logic
+        if (autopilot) {
+          const nextPipe = game.pipes.find(pipe => pipe.x + PIPE_WIDTH > canvas.width / 2 - BIRD_SIZE / 2);
+          if (nextPipe) {
+            const pipeCenter = nextPipe.topHeight + nextPipe.gap / 2;
+            const birdCenter = game.bird.y + BIRD_SIZE / 2;
+            const distanceToPipe = nextPipe.x - (canvas.width / 2 + BIRD_SIZE / 2);
+            
+            // Jump if bird is below center and pipe is approaching
+            if (birdCenter > pipeCenter - 20 && distanceToPipe < 200) {
+              game.bird.velocity = JUMP_FORCE;
+            }
+            // Also jump if falling too fast and close to top of gap
+            if (game.bird.velocity > 3 && birdCenter > nextPipe.topHeight + 30 && distanceToPipe < 150) {
+              game.bird.velocity = JUMP_FORCE;
+            }
+          }
+        }
 
         // Update bird physics
         game.bird.velocity += effectiveGravity;
@@ -596,6 +616,18 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
 
         {gameState === "playing" && (
           <>
+            <Button
+              onClick={() => setAutopilot(!autopilot)}
+              variant={autopilot ? "default" : "outline"}
+              size="sm"
+              className={`absolute top-4 right-4 z-10 font-bold shadow-lg transition-all ${
+                autopilot 
+                  ? 'bg-green-500 hover:bg-green-600 text-white border-2 border-green-300 animate-pulse' 
+                  : 'bg-white/90 hover:bg-white border-2 border-gray-300'
+              }`}
+            >
+              {autopilot ? '🤖 AI ON' : '🧠 AI OFF'}
+            </Button>
             <div className="absolute top-6 left-0 right-0 text-center animate-fade-in">
               <div className="inline-flex items-center gap-2 bg-gradient-to-br from-white/95 to-white/90 px-8 py-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] border-2 border-white/50">
                 <span className="text-2xl">🏆</span>
