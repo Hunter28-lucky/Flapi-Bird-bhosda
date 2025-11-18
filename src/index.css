@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 200 100% 92%;
+    --foreground: 220 40% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 40% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 40% 15%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 48 96% 53%;
+    --secondary-foreground: 220 40% 15%;
+
+    --muted: 200 20% 80%;
+    --muted-foreground: 220 20% 40%;
+
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 30% 85%;
+    --input: 200 30% 85%;
+    --ring: 142 76% 36%;
+
+    --radius: 0.75rem;
+    
+    --game-sky-start: 200 100% 85%;
+    --game-sky-mid: 195 100% 88%;
+    --game-sky-end: 190 85% 92%;
+    --game-pipe: 142 76% 40%;
+    --game-pipe-dark: 142 76% 28%;
+    --game-pipe-highlight: 142 80% 50%;
+    --game-ground: 30 60% 40%;
+    --game-ground-dark: 30 60% 30%;
+    --game-particle: 48 96% 53%;
+    --game-score: 220 40% 15%;
+    --game-shadow: 0 0% 0%;
+    --game-glow: 142 76% 60%;
+    --game-bird-shadow: 0 0% 0%;
+    
+    --gradient-game-sky: linear-gradient(to bottom, hsl(var(--game-sky-start)), hsl(var(--game-sky-mid)), hsl(var(--game-sky-end)));
+    --shadow-game-card: 0 20px 50px -10px hsl(var(--game-shadow) / 0.3);
+    --shadow-game-score: 0 4px 20px hsl(var(--game-shadow) / 0.15);
+    --shadow-bird: 0 8px 30px hsl(var(--game-bird-shadow) / 0.4);
+    --glow-pipe: 0 0 20px hsl(var(--game-glow) / 0.3);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 40% 12%;
+    --foreground: 200 20% 90%;
+
+    --card: 220 35% 15%;
+    --card-foreground: 200 20% 90%;
+
+    --popover: 220 35% 15%;
+    --popover-foreground: 200 20% 90%;
+
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 30% 20%;
+    --secondary-foreground: 200 20% 90%;
+
+    --muted: 220 30% 20%;
+    --muted-foreground: 200 15% 60%;
+
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 30% 25%;
+    --input: 220 30% 25%;
+    --ring: 142 76% 45%;
+    
+    --game-sky-start: 220 50% 8%;
+    --game-sky-mid: 220 45% 12%;
+    --game-sky-end: 220 40% 18%;
+    --game-pipe: 142 76% 40%;
+    --game-pipe-dark: 142 76% 28%;
+    --game-pipe-highlight: 142 80% 50%;
+    --game-ground: 30 40% 20%;
+    --game-ground-dark: 30 50% 12%;
+    --game-particle: 48 96% 53%;
+    --game-score: 200 20% 90%;
+    --game-shadow: 0 0% 0%;
+    
+    --gradient-game-sky: linear-gradient(to bottom, hsl(var(--game-sky-start)), hsl(var(--game-sky-mid)), hsl(var(--game-sky-end)));
+    --shadow-game-card: 0 20px 50px -10px hsl(var(--game-shadow) / 0.5);
+    --shadow-game-score: 0 4px 20px hsl(var(--game-shadow) / 0.25);
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom animations for enhanced game experience */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
