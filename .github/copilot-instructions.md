@@ -154,6 +154,6 @@ npm run preview      # Preview production build
 5. Update this file if introducing new architectural patterns
 
 ## Deployment
-- Project uses Lovable.dev for CI/CD (see README.md)
+- Build with `npm run build` and deploy `dist` folder to any static hosting
 - Supabase project must be configured with environment variables
 - Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  
+  <!-- Homepage / Game -->
+  <url>
+    <loc>https://flappyamitabh.com/</loc>
+    <lastmod>2025-11-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://flappyamitabh.com/amitabh-face.png</image:loc>
+      <image:title>Flappy Amitabh - Custom Flappy Bird Game</image:title>
+      <image:caption>Play Flappy Bird featuring Amitabh Bachchan with custom images and multiplayer</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Single Player Mode -->
+  <url>
+    <loc>https://flappyamitabh.com/?mode=single</loc>
+    <lastmod>2025-11-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Multiplayer Mode -->
+  <url>
+    <loc>https://flappyamitabh.com/?mode=multiplayer</loc>
+    <lastmod>2025-11-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Leaderboard -->
+  <url>
+    <loc>https://flappyamitabh.com/?view=leaderboard</loc>
+    <lastmod>2025-11-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

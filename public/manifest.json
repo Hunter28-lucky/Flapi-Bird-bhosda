@@ -1,0 +1,55 @@
+{
+  "name": "Flappy Amitabh - Custom Flappy Bird Game",
+  "short_name": "Flappy Amitabh",
+  "description": "Play the ultimate Flappy Bird game featuring Amitabh Bachchan! Customize with your own images, compete in multiplayer mode, or enjoy single player.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#87CEEB",
+  "theme_color": "#34D399",
+  "orientation": "portrait",
+  "categories": ["games", "entertainment"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "type": "image/png",
+      "sizes": "540x720",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "type": "image/png",
+      "sizes": "1280x720",
+      "form_factor": "wide"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
