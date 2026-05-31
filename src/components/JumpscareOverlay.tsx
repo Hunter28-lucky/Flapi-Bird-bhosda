@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import amitabhFace from "@/assets/amitabh-face.png";
 
 interface JumpscareOverlayProps {
   show: boolean;
@@ -6,11 +7,14 @@ interface JumpscareOverlayProps {
 }
 
 export const JumpscareOverlay: React.FC<JumpscareOverlayProps> = ({ show, onComplete }) => {
+  const [imgSrc, setImgSrc] = useState("/jumpscare.png");
+
   useEffect(() => {
     if (show) {
       // Vibrate for 1 second then go back to normal
       const timer = setTimeout(() => {
         onComplete();
+        setImgSrc("/jumpscare.png"); // Reset for next time
       }, 1000);
       
       // Optional: Add browser vibration API if supported
@@ -26,12 +30,12 @@ export const JumpscareOverlay: React.FC<JumpscareOverlayProps> = ({ show, onComp
   return (
     <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center bg-black/80 animate-vibrate">
       <img 
-        src="/jumpscare.png" 
+        src={imgSrc} 
         alt="Jumpscare"
         className="w-full h-full object-cover"
-        // If image is missing, we still want it to look decent
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = "https://i.ibb.co/KVxJgYg/placeholder.png";
+        // If image is missing from public folder, fallback to default amitabh face
+        onError={() => {
+          setImgSrc(amitabhFace);
         }}
       />
     </div>
