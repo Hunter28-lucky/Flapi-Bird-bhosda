@@ -73,12 +73,12 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     powerUpAudioRef.current.volume = 0.5;
   }, []);
 
-  const GRAVITY = 0.28; // Reduced from 0.35 for slower falling
-  const JUMP_FORCE = -8.5; // Slightly less powerful jump for more control
+  const GRAVITY = 0.15; // Reduced from 0.35 for slower falling
+  const JUMP_FORCE = -5.5; // Slightly less powerful jump for more control
   const BIRD_SIZE = 50;
   const PIPE_WIDTH = 80;
-  const PIPE_GAP = 200; // Increased from 180 for easier passage
-  const PIPE_SPEED = 2.5; // Reduced from 3 for slower pipes
+  const PIPE_GAP = 300; // Increased from 180 for easier passage
+  const PIPE_SPEED = 1.5; // Reduced from 3 for slower pipes
   const POWERUP_SIZE = 35;
 
   useEffect(() => {
@@ -241,7 +241,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
         game.bird.rotation = Math.min(Math.max(game.bird.velocity * 3, -30), 90);
 
         // Generate pipes (increased interval for easier gameplay)
-        if (game.frameCount % 110 === 0) { // Changed from 90 to 110 frames
+        if (game.frameCount % 200 === 0) { // Changed for easier gameplay
           const topHeight = Math.random() * (canvas.height - PIPE_GAP - 200) + 100;
           game.pipes.push({
             x: canvas.width,

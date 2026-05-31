@@ -39,12 +39,12 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
     image: null as HTMLImageElement | null,
   });
 
-  const GRAVITY = 0.28;
-  const JUMP_FORCE = -8.5;
+  const GRAVITY = 0.15;
+  const JUMP_FORCE = -5.5;
   const BIRD_SIZE = 50;
   const PIPE_WIDTH = 80;
-  const PIPE_GAP = 200;
-  const PIPE_SPEED = 2.5;
+  const PIPE_GAP = 300;
+  const PIPE_SPEED = 1.5;
 
   useEffect(() => {
     collisionAudioRef.current = new Audio("/sounds/collision.mp3");
@@ -174,7 +174,7 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
         game.myBird.rotation = Math.min(Math.max(game.myBird.velocity * 3, -30), 90);
 
         // Generate pipes (increased interval for easier gameplay)
-        if (game.frameCount % 110 === 0) {
+        if (game.frameCount % 200 === 0) {
           const topHeight = Math.random() * (canvas.height - PIPE_GAP - 200) + 100;
           game.pipes.push({ x: canvas.width, topHeight, gap: PIPE_GAP, passed: false });
         }
