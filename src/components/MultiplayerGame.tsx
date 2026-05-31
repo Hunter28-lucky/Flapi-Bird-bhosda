@@ -5,6 +5,7 @@ import { toast } from "@/lib/toast";
 import { playJumpSound } from "@/utils/audioUtils";
 import amitabhFace from "@/assets/amitabh-face.png";
 import P2PMultiplayer, { GameState } from "@/lib/p2pMultiplayer";
+import { JumpscareOverlay } from "@/components/JumpscareOverlay";
 
 interface MultiplayerGameProps {
   roomCode: string;
@@ -27,6 +28,7 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<Map<string, Player>>(new Map());
   const [connected, setConnected] = useState(false);
+  const [showJumpscare, setShowJumpscare] = useState(false);
   const collisionAudioRef = useRef<HTMLAudioElement | null>(null);
   const p2pRef = useRef<P2PMultiplayer | null>(null);
 
@@ -200,6 +202,7 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
             100 < pipe.x + PIPE_WIDTH &&
             (game.myBird.y < pipe.topHeight || game.myBird.y + BIRD_SIZE > pipe.topHeight + pipe.gap)
           ) {
+            if (game.isAlive) setShowJumpscare(true);
             game.isAlive = false;
             collisionAudioRef.current?.play();
           }
@@ -212,6 +215,7 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
 
         // Check ground/ceiling collision
         if (game.myBird.y < 0 || game.myBird.y + BIRD_SIZE > canvas.height - 50) {
+          if (game.isAlive) setShowJumpscare(true);
           game.isAlive = false;
           collisionAudioRef.current?.play();
         }
@@ -291,6 +295,8 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
             Leave
           </Button>
         </div>
+
+        <JumpscareOverlay show={showJumpscare} onComplete={() => setShowJumpscare(false)} />
 
         {!gameStarted ? (
           <div className="text-center space-y-4">

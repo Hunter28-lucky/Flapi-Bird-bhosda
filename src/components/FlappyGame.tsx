@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/simple-ui/Button";
 import amitabhFace from "@/assets/amitabh-face.png";
 import { playJumpSound } from "@/utils/audioUtils";
+import { JumpscareOverlay } from "@/components/JumpscareOverlay";
 
 interface Pipe {
   x: number;
@@ -25,7 +26,15 @@ interface FlappyGameProps {
 export const FlappyGame = ({ customImage }: FlappyGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<"menu" | "playing" | "gameOver">("menu");
+  const [showJumpscare, setShowJumpscare] = useState(false);
   const [score, setScore] = useState(0);
+
+  useEffect(() => {
+    if (gameState === "gameOver") {
+      setShowJumpscare(true);
+    }
+  }, [gameState]);
+
   const [highScore, setHighScore] = useState(() => {
     const saved = localStorage.getItem("flappyHighScore");
     return saved ? parseInt(saved) : 0;
@@ -530,7 +539,18 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
                   </div>
                 </div>
               )}
-                            )}\n              <div className=\"flex flex-col gap-2 sm:gap-3\">\n                <Button\n                  onClick={startGame}\n                  size=\"lg\"\n                  className=\"bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg sm:text-xl px-8 sm:px-10 py-6 sm:py-7 rounded-xl shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)] hover:shadow-[0_15px_40px_-5px_rgba(34,197,94,0.6)] transition-all active:scale-95 touch-none\"\n                >\n                  {gameState === \"menu\" ? \"\ud83d\ude80 Start Game\" : \"\ud83d\udd04 Play Again\"}\n                </Button>\n              </div>\n              <p className=\"text-xs sm:text-sm text-white/60 mt-2 sm:mt-4 font-medium px-2\">\n                {gameState === \"menu\" ? \"Tap anywhere to fly!\" : \"Tap to flap\"}\n              </p>
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <Button
+                  onClick={startGame}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg sm:text-xl px-8 sm:px-10 py-6 sm:py-7 rounded-xl shadow-[0_10px_30px_-5px_rgba(34,197,94,0.5)] hover:shadow-[0_15px_40px_-5px_rgba(34,197,94,0.6)] transition-all active:scale-95 touch-none"
+                >
+                  {gameState === "menu" ? "🚀 Start Game" : "🔄 Play Again"}
+                </Button>
+              </div>
+              <p className="text-xs sm:text-sm text-white/60 mt-2 sm:mt-4 font-medium px-2">
+                {gameState === "menu" ? "Tap anywhere to fly!" : "Tap to flap"}
+              </p>
             </div>
           </div>
         )}
@@ -545,6 +565,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
             </div>
           </>
         )}
+        <JumpscareOverlay show={showJumpscare} onComplete={() => setShowJumpscare(false)} />
       </div>
 
       <div className="mt-4 sm:mt-8 text-center space-y-2 sm:space-y-3 bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-border/50 w-full max-w-[400px]">

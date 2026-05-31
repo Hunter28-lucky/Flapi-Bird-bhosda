@@ -4,6 +4,7 @@ import { Leaderboard } from "@/components/Leaderboard";
 import amitabhFace from "@/assets/amitabh-face.png";
 import { playJumpSound } from "@/utils/audioUtils";
 import { Shield, Zap, Star, Clock } from "lucide-react";
+import { JumpscareOverlay } from "@/components/JumpscareOverlay";
 
 interface Pipe {
   x: number;
@@ -35,7 +36,15 @@ interface FlappyGameProps {
 export const FlappyGame = ({ customImage }: FlappyGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<"menu" | "playing" | "gameOver">("menu");
+  const [showJumpscare, setShowJumpscare] = useState(false);
   const [score, setScore] = useState(0);
+
+  useEffect(() => {
+    if (gameState === "gameOver") {
+      setShowJumpscare(true);
+    }
+  }, [gameState]);
+
   const [highScore, setHighScore] = useState(() => {
     const saved = localStorage.getItem("flappyHighScore");
     return saved ? parseInt(saved) : 0;
@@ -707,6 +716,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
             </div>
           </>
         )}
+        <JumpscareOverlay show={showJumpscare} onComplete={() => setShowJumpscare(false)} />
       </div>
 
       <div className="mt-4 sm:mt-8 text-center space-y-2 sm:space-y-3 bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-border/50 w-full max-w-[400px]">

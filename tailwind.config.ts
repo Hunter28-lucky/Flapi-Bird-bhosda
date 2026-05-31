@@ -94,10 +94,18 @@ export default {
             height: "0",
           },
         },
+        vibrate: {
+          "0%, 100%": { transform: "translate(0)" },
+          "20%": { transform: "translate(-10px, 10px)" },
+          "40%": { transform: "translate(-10px, -10px)" },
+          "60%": { transform: "translate(10px, 10px)" },
+          "80%": { transform: "translate(10px, -10px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        vibrate: "vibrate 0.1s linear infinite",
       },
     },
   },
