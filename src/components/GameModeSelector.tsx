@@ -1,5 +1,6 @@
 import { Button } from "@/components/simple-ui/Button";
 import { Card } from "@/components/simple-ui/Card";
+import { Instagram } from "lucide-react";
 
 interface GameModeSelectorProps {
   onSelectMode: (mode: "single" | "multi") => void;
@@ -31,6 +32,21 @@ export const GameModeSelector = ({ onSelectMode }: GameModeSelectorProps) => {
           </Button>
         </div>
       </Card>
+      
+      <div className="mt-8 text-center bg-black/20 px-6 py-3 rounded-full backdrop-blur-sm border border-white/10 hover:bg-black/30 transition-colors animate-fade-in shadow-lg">
+        <p className="text-white/80 text-sm sm:text-base font-medium flex items-center justify-center gap-2">
+          Fun Creator: 
+          <a 
+            href="https://www.instagram.com/krish_yogi_12/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="flex items-center gap-1.5 text-pink-400 hover:text-pink-300 font-bold transition-transform hover:scale-105 active:scale-95"
+          >
+            <Instagram className="w-4 h-4 sm:w-5 sm:h-5" />
+            @krish_yogi_12
+          </a>
+        </p>
+      </div>
     </div>
   );
 };
