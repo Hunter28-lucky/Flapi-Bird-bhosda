@@ -50,6 +50,9 @@ export const GameModeSelector = ({ onSelectMode }: GameModeSelectorProps) => {
       <p className="mt-3 text-pink-400/90 text-sm font-bold tracking-wide animate-pulse drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
         💅 Baddies can follow me
       </p>
+      <div className="mt-4 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs text-white/70 max-w-xs text-center font-semibold tracking-wide hover:bg-white/10 hover:text-white transition-all cursor-pointer">
+        🚀 DM for your own custom website/game!
+      </div>
     </div>
   );
 };
