@@ -607,16 +607,32 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
           ctx.stroke();
         }
 
-        // Enhanced shadow
+        // Enhanced circular shadow
+        ctx.save();
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
         ctx.shadowOffsetX = 6;
         ctx.shadowOffsetY = 6;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.01)";
+        ctx.beginPath();
+        ctx.arc(0, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
+        // Round main bird
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+        ctx.clip();
         ctx.drawImage(game.image, -BIRD_SIZE / 2, -BIRD_SIZE / 2, BIRD_SIZE, BIRD_SIZE);
+        ctx.restore();
 
         // Motion trail
         if (Math.abs(game.bird.velocity) > 3) {
+          ctx.save();
           ctx.globalAlpha = 0.3;
+          ctx.beginPath();
+          ctx.arc(-game.bird.velocity * 1.2, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+          ctx.clip();
           ctx.drawImage(
             game.image,
             -BIRD_SIZE / 2 - game.bird.velocity * 1.2,
@@ -624,6 +640,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
             BIRD_SIZE,
             BIRD_SIZE
           );
+          ctx.restore();
         }
 
         ctx.restore();

@@ -47,6 +47,9 @@ export const GameModeSelector = ({ onSelectMode }: GameModeSelectorProps) => {
           </a>
         </p>
       </div>
+      <p className="mt-3 text-pink-400/90 text-sm font-bold tracking-wide animate-pulse drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+        💅 Baddies can follow me
+      </p>
     </div>
   );
 };

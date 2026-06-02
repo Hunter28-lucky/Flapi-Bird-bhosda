@@ -226,7 +226,27 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
         ctx.save();
         ctx.translate(100 + BIRD_SIZE / 2, game.myBird.y + BIRD_SIZE / 2);
         ctx.rotate((game.myBird.rotation * Math.PI) / 180);
+        
+        // Draw round shadow
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 4;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.01)";
+        ctx.beginPath();
+        ctx.arc(0, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Round main bird
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+        ctx.clip();
         ctx.drawImage(game.image, -BIRD_SIZE / 2, -BIRD_SIZE / 2, BIRD_SIZE, BIRD_SIZE);
+        ctx.restore();
+
         ctx.restore();
       }
 
@@ -235,8 +255,16 @@ export const MultiplayerGame = ({ roomCode, playerName, isHost, onLeave }: Multi
         if (player.isAlive && game.image) {
           ctx.save();
           ctx.globalAlpha = 0.6;
-          ctx.drawImage(game.image, 150, player.birdY, BIRD_SIZE, BIRD_SIZE);
-          ctx.globalAlpha = 1;
+          
+          // Draw round opponent bird
+          ctx.save();
+          ctx.translate(150 + BIRD_SIZE / 2, player.birdY + BIRD_SIZE / 2);
+          ctx.beginPath();
+          ctx.arc(0, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(game.image, -BIRD_SIZE / 2, -BIRD_SIZE / 2, BIRD_SIZE, BIRD_SIZE);
+          ctx.restore();
+          
           ctx.fillStyle = "white";
           ctx.font = "14px Arial";
           ctx.fillText(player.name, 150, player.birdY - 10);

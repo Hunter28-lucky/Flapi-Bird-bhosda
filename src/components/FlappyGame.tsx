@@ -359,17 +359,23 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
         ctx.translate(canvas.width / 2, game.bird.y + BIRD_SIZE / 2);
         ctx.rotate((game.bird.rotation * Math.PI) / 180);
 
-        // Enhanced shadow with glow
-        ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-        ctx.shadowBlur = 25;
-        ctx.shadowOffsetX = 8;
-        ctx.shadowOffsetY = 8;
-
-        // Outer glow effect
+        // Outer glow/shadow effect (cast by a transparent circle so it matches the round shape)
+        ctx.save();
         ctx.shadowColor = "rgba(52, 211, 153, 0.5)";
         ctx.shadowBlur = 35;
+        ctx.shadowOffsetX = 8;
+        ctx.shadowOffsetY = 8;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.01)";
+        ctx.beginPath();
+        ctx.arc(0, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
-        // Draw main bird
+        // Draw main round bird
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+        ctx.clip();
         ctx.drawImage(
           game.image,
           -BIRD_SIZE / 2,
@@ -377,11 +383,15 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
           BIRD_SIZE,
           BIRD_SIZE
         );
+        ctx.restore();
 
         // Motion trail effect when moving fast
         if (Math.abs(game.bird.velocity) > 3) {
+          ctx.save();
           ctx.globalAlpha = 0.25;
-          ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.arc(-game.bird.velocity * 0.8, 0, BIRD_SIZE / 2, 0, Math.PI * 2);
+          ctx.clip();
           ctx.drawImage(
             game.image,
             -BIRD_SIZE / 2 - game.bird.velocity * 0.8,
@@ -389,7 +399,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
             BIRD_SIZE,
             BIRD_SIZE
           );
-          ctx.globalAlpha = 1;
+          ctx.restore();
         }
 
         ctx.restore();
