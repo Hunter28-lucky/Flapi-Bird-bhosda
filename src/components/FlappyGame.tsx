@@ -525,7 +525,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
           <div className="absolute inset-0 flex items-center justify-center backdrop-blur-md bg-black/70 rounded-2xl animate-fade-in">
             <div className="text-center space-y-4 sm:space-y-6 p-4 sm:p-8 max-w-sm w-full">
               <h1 className="text-4xl sm:text-6xl font-black text-white mb-2 sm:mb-4 drop-shadow-[0_4px_20px_rgba(255,255,255,0.3)] animate-scale-in">
-                {gameState === "menu" ? "Flappy Amitabh" : "Game Over!"}
+                {gameState === "menu" ? "Flappy Bhondu" : "Game Over!"}
               </h1>
               {gameState === "gameOver" && (
                 <div className="space-y-2 sm:space-y-3 animate-fade-in">

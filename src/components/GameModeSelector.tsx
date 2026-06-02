@@ -11,7 +11,7 @@ export const GameModeSelector = ({ onSelectMode }: GameModeSelectorProps) => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-game-sky-start via-game-sky-mid to-game-sky-end p-4">
       <Card className="p-6 sm:p-8 space-y-4 sm:space-y-6 bg-card/90 backdrop-blur-sm border-2 border-border w-full max-w-md">
         <h1 className="text-4xl sm:text-5xl font-black text-center bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Flappy Amitabh
+          Flappy Bhondu Janta Party
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground text-center">Choose your game mode</p>
         <div className="flex flex-col gap-3 sm:gap-4">

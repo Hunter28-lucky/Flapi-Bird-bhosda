@@ -68,6 +68,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     slowEndFrame: 0,
     doublePoints: false,
     doubleEndFrame: 0,
+    floatingTexts: [] as Array<{ x: number; y: number; text: string; color: string; size: number; life: number; vy: number }>,
   });
 
   const collisionAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -130,6 +131,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
     gameRef.current.activeShield = false;
     gameRef.current.slowMotion = false;
     gameRef.current.doublePoints = false;
+    gameRef.current.floatingTexts = [];
     setScore(0);
     setGameState("playing");
   };
@@ -260,8 +262,8 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
           });
         }
 
-        // Generate power-ups (every 300 frames, 30% chance)
-        if (game.frameCount % 300 === 0 && Math.random() < 0.3) {
+        // Generate power-ups (every 220 frames, 45% chance)
+        if (game.frameCount % 220 === 0 && Math.random() < 0.45) {
           const types: ('shield' | 'slow' | 'double')[] = ['shield', 'slow', 'double'];
           const type = types[Math.floor(Math.random() * types.length)];
           game.powerUps.push({
@@ -286,6 +288,26 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, 4, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
+            return true;
+          }
+          return false;
+        });
+
+        // Update and draw floating texts
+        game.floatingTexts = game.floatingTexts.filter((t) => {
+          t.y += t.vy;
+          t.life -= 0.015;
+
+          if (t.life > 0) {
+            ctx.save();
+            ctx.globalAlpha = t.life;
+            ctx.fillStyle = t.color;
+            ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+            ctx.shadowBlur = 4;
+            ctx.font = `bold ${t.size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText(t.text, t.x, t.y);
             ctx.restore();
             return true;
           }
@@ -348,7 +370,62 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
                 setHighScore(newScore);
                 localStorage.setItem("flappyHighScore", newScore.toString());
               }
+              
+              // Milestone announcements
+              if (newScore === 5) {
+                game.floatingTexts.push({
+                  x: canvas.width / 2,
+                  y: game.bird.y - 40,
+                  text: "🔥 GOOD START! 🔥",
+                  color: "#f59e0b",
+                  size: 24,
+                  life: 1.2,
+                  vy: -1.0
+                });
+              } else if (newScore === 10) {
+                game.floatingTexts.push({
+                  x: canvas.width / 2,
+                  y: game.bird.y - 40,
+                  text: "⚡ UNSTOPPABLE! ⚡",
+                  color: "#ec4899",
+                  size: 26,
+                  life: 1.2,
+                  vy: -1.0
+                });
+              } else if (newScore === 20) {
+                game.floatingTexts.push({
+                  x: canvas.width / 2,
+                  y: game.bird.y - 40,
+                  text: "👑 GODLIKE! 👑",
+                  color: "#a855f7",
+                  size: 30,
+                  life: 1.5,
+                  vy: -0.8
+                });
+              } else if (newScore % 10 === 0 && newScore > 20) {
+                game.floatingTexts.push({
+                  x: canvas.width / 2,
+                  y: game.bird.y - 40,
+                  text: `🔥 ${newScore} POINTS! 🔥`,
+                  color: "#ef4444",
+                  size: 28,
+                  life: 1.2,
+                  vy: -1.0
+                });
+              }
+              
               return newScore;
+            });
+
+            // Add floating score popup
+            game.floatingTexts.push({
+              x: canvas.width / 2 + 10,
+              y: game.bird.y - 20,
+              text: game.doublePoints ? "+2" : "+1",
+              color: game.doublePoints ? "#fbbf24" : "#34d399",
+              size: 24,
+              life: 1.0,
+              vy: -2.0
             });
             
             // Enhanced score particles
@@ -446,16 +523,43 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
               powerUp.collected = true;
               playPowerUpSound();
               
-              // Activate power-up
+               // Activate power-up
               if (powerUp.type === 'shield') {
                 game.activeShield = true;
-                game.shieldEndFrame = game.frameCount + 300; // 5 seconds
+                game.shieldEndFrame = game.frameCount + 480; // 8 seconds
+                game.floatingTexts.push({
+                  x: powerUp.x,
+                  y: powerUpY - 20,
+                  text: "🛡️ SHIELD! (8s)",
+                  color: "#3b82f6",
+                  size: 20,
+                  life: 1.0,
+                  vy: -1.5
+                });
               } else if (powerUp.type === 'slow') {
                 game.slowMotion = true;
-                game.slowEndFrame = game.frameCount + 240; // 4 seconds
+                game.slowEndFrame = game.frameCount + 360; // 6 seconds
+                game.floatingTexts.push({
+                  x: powerUp.x,
+                  y: powerUpY - 20,
+                  text: "⏰ SLOW MOTION! (6s)",
+                  color: "#8b5cf6",
+                  size: 20,
+                  life: 1.0,
+                  vy: -1.5
+                });
               } else if (powerUp.type === 'double') {
                 game.doublePoints = true;
-                game.doubleEndFrame = game.frameCount + 360; // 6 seconds
+                game.doubleEndFrame = game.frameCount + 480; // 8 seconds
+                game.floatingTexts.push({
+                  x: powerUp.x,
+                  y: powerUpY - 20,
+                  text: "⭐ 2X POINTS! (8s)",
+                  color: "#fbbf24",
+                  size: 20,
+                  life: 1.0,
+                  vy: -1.5
+                });
               }
               
               // Collect particles
@@ -644,7 +748,7 @@ export const FlappyGame = ({ customImage }: FlappyGameProps) => {
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 rounded-2xl animate-fade-in">
             <div className="text-center space-y-4 sm:space-y-6 p-4 sm:p-8 max-w-sm w-full">
               <h1 className="text-4xl sm:text-6xl font-black text-white mb-2 sm:mb-4 drop-shadow-[0_4px_20px_rgba(255,255,255,0.3)] animate-scale-in">
-                {gameState === "menu" ? "Flappy Amitabh" : "Game Over!"}
+                {gameState === "menu" ? "Flappy Bhondu" : "Game Over!"}
               </h1>
               {gameState === "gameOver" && (
                 <div className="space-y-2 sm:space-y-3 animate-fade-in">

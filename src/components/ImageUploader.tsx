@@ -92,7 +92,7 @@ export const ImageUploader = ({ onImageSelect, currentImage, onReset }: ImageUpl
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    toast.success("Reset to Amitabh Bachchan!");
+    toast.success("Reset to Bhondu Janta Party!");
   };
 
   return (
