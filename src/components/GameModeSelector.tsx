@@ -31,6 +31,21 @@ export const GameModeSelector = ({ onSelectMode }: GameModeSelectorProps) => {
             👥 Multiplayer
           </Button>
         </div>
+
+        {/* High-contrast bold tagline & website promotion inside the card */}
+        <div className="pt-4 border-t border-border flex flex-col items-center gap-3">
+          <p className="text-pink-500 font-extrabold text-sm sm:text-base tracking-wide animate-pulse text-center">
+            💅 Baddies can follow me
+          </p>
+          <a 
+            href="https://www.instagram.com/krish_yogi_12/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-accent/15 border-2 border-accent/40 hover:border-accent/70 px-4 py-3 rounded-xl text-center font-extrabold text-sm text-foreground hover:bg-accent/25 hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-md block"
+          >
+            🚀 Want a custom website/game? DM me!
+          </a>
+        </div>
       </Card>
       
       <div className="mt-8 text-center bg-black/20 px-6 py-3 rounded-full backdrop-blur-sm border border-white/10 hover:bg-black/30 transition-colors animate-fade-in shadow-lg">
@@ -46,12 +61,6 @@ export const GameModeSelector = ({ onSelectMode }: GameModeSelectorProps) => {
             @krish_yogi_12
           </a>
         </p>
-      </div>
-      <p className="mt-3 text-pink-400/90 text-sm font-bold tracking-wide animate-pulse drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-        💅 Baddies can follow me
-      </p>
-      <div className="mt-4 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs text-white/70 max-w-xs text-center font-semibold tracking-wide hover:bg-white/10 hover:text-white transition-all cursor-pointer">
-        🚀 DM for your own custom website/game!
       </div>
     </div>
   );
